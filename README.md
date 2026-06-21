@@ -1,4 +1,4 @@
-# LMS Seribu Bulan — Agent Guidelines
+# LMS Seribu Bulan
 
 Learning Management System for SMPIT Seribu Bulan Boarding School. Manages teacher training programs (Discovery Learning with PID media). All UI text and error messages are in **Indonesian (Bahasa)**.
 
