@@ -1,0 +1,161 @@
+// Prisma Schema for LMS - SMPIT Seribu Bulan Boarding School
+// PRD V2.2 - Technical Specification
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RoleName {
+  SUPER_ADMIN
+  FACILITATOR
+  PESERTA
+}
+
+enum ProgramStatus {
+  DRAFT
+  PUBLISHED
+  RUNNING
+  COMPLETED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWED
+  REVISION_REQUIRED
+  APPROVED
+}
+
+enum OjtStatus {
+  PENDING
+  SUBMITTED
+  REVIEWED
+  APPROVED
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  password    String
+  role        RoleName @default(PESERTA)
+  institution String   @default("SMPIT Seribu Bulan Boarding School")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  programs    ProgramUser[]
+  submissions Submission[]
+  ojtReports  OjtReport[]
+  reflections Reflection[]
+  auditLogs   AuditLog[]
+}
+
+model Program {
+  id          String        @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  batch       String
+  status      ProgramStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+
+  users       ProgramUser[]
+  materials   Material[]
+  assignments Assignment[]
+  reflections Reflection[]
+}
+
+model ProgramUser {
+  id        String @id @default(uuid())
+  userId    String
+  programId String
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, programId])
+}
+
+model Material {
+  id        String @id @default(uuid())
+  title     String
+  fileUrl   String
+  type      String // PDF, PPTX, LINK
+  programId String
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+}
+
+model Assignment {
+  id        String   @id @default(uuid())
+  title     String
+  type      String   // RPP, MATERI, OBSERVASI, REFLEKSI
+  deadline  DateTime
+  programId String
+
+  program     Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+}
+
+model Submission {
+  id           String           @id @default(uuid())
+  assignmentId String
+  userId       String
+  fileUrl      String
+  status       SubmissionStatus @default(DRAFT)
+  feedback     String?
+  score        Int?
+  updatedAt    DateTime         @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OjtReport {
+  id               String    @id @default(uuid())
+  userId           String
+  meeting          Int       // 1 atau 2
+  documentationUrl String    // Metadata biner URL dari S3
+  videoUrl         String?
+  observationUrl   String?
+  reflectionText   String?
+  status           OjtStatus @default(PENDING)
+  createdAt        DateTime  @default(now())
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentProducts StudentProduct[]
+}
+
+model StudentProduct {
+  id          String @id @default(uuid())
+  ojtReportId String
+  fileUrl     String
+
+  ojtReport OjtReport @relation(fields: [ojtReportId], references: [id], onDelete: Cascade)
+}
+
+model Reflection {
+  id        String   @id @default(uuid())
+  userId    String
+  programId String
+  type      String   // TEACHER, STUDENT
+  response  Json     // Skema form dinamis instrumen
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
