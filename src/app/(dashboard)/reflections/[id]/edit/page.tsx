@@ -35,10 +35,10 @@ export default function ReflectionEditPage() {
                 const response = await reflectionsApi.get(params.id as string);
                 const data = response.reflection as Reflection;
                 setReflection(data);
-                const response = (data.response ?? {}) as Record<string, string>;
+                const reflectionResponse = (data.response ?? {}) as Record<string, string>;
                 setFormData({
                     type: data.type,
-                    response: {
+                    response: reflectionResponse, {
                         kekuatan: response.kekuatan || "",
                         kelemahan: response.kelemahan || "",
                         rencanaPerbaikan: response.rencanaPerbaikan || "",
