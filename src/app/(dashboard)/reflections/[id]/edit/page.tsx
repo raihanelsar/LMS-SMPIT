@@ -32,9 +32,11 @@ export default function ReflectionEditPage() {
     useEffect(() => {
         const loadReflection = async () => {
             try {
-                const response = await reflectionsApi.get(params.id as string);
-                const data = response.reflection as Reflection;
+                // Changed from 'response' to 'apiResult' to avoid production build conflicts
+                const apiResult = await reflectionsApi.get(params.id as string);
+                const data = apiResult.reflection as Reflection;
                 setReflection(data);
+                
                 const reflectionResponse = (data.response ?? {}) as Record<string, string>;
                 setFormData({
                     type: data.type,
