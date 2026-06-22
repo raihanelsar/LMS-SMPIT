@@ -1,0 +1,7 @@
+# Supabase Functions Configuration
+
+[functions.todos]
+# For non-"user" auth modes (like 'secret', 'publishable', or 'none'), 
+# set verify_jwt to false to allow the @supabase/server SDK to handle 
+# validation directly.
+verify_jwt = false
