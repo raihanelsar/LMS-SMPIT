@@ -38,11 +38,11 @@ export default function ReflectionEditPage() {
                 const reflectionResponse = (data.response ?? {}) as Record<string, string>;
                 setFormData({
                     type: data.type,
-                    response: reflectionResponse, {
-                        kekuatan: response.kekuatan || "",
-                        kelemahan: response.kelemahan || "",
-                        rencanaPerbaikan: response.rencanaPerbaikan || "",
-                        catatanTambahan: response.catatanTambahan || "",
+                    response: {
+                        kekuatan: reflectionResponse.kekuatan || "",
+                        kelemahan: reflectionResponse.kelemahan || "",
+                        rencanaPerbaikan: reflectionResponse.rencanaPerbaikan || "",
+                        catatanTambahan: reflectionResponse.catatanTambahan || "",
                     },
                 });
             } catch (error) {
