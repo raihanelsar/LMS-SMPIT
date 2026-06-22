@@ -24,17 +24,14 @@ export default function AssignmentDetailPage() {
 
     const isPeserta = user?.role === "PESERTA";
 
-    useEffect(() => {
-        loadAssignmentData();
-    }, [params.id]);
-
     const loadAssignmentData = async () => {
         try {
             const assignmentRes = await assignmentsApi.getById(params.id as string);
             setAssignment(assignmentRes.assignment);
 
             const submissionsRes = await submissionsApi.list({assignmentId: params.id as string});
-            const userSubmissions = submissionsRes.submissions?.filter((s: Submission) => s.userId === user?.id) || [];
+            const userSubmissions =
+                submissionsRes.submissions?.filter((s: Submission) => s.userId === user?.id) || [];
             setSubmissions(userSubmissions);
         } catch (error) {
             console.error("Error loading assignment:", error);
@@ -42,6 +39,10 @@ export default function AssignmentDetailPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        loadAssignmentData();
+    }, [params.id, user?.id]);
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();

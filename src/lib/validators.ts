@@ -82,6 +82,7 @@ export const materialUpdateSchema = z.object({
 
 export const assignmentSchema = z.object({
     title: z.string().min(2, "Judul minimal 2 karakter"),
+    description: z.string().optional(),
     type: z.enum(["RPP", "MATERI", "OBSERVASI", "REFLEKSI"]),
     deadline: z.string().datetime(),
     programId: z.string().uuid(),
@@ -89,6 +90,7 @@ export const assignmentSchema = z.object({
 
 export const assignmentUpdateSchema = z.object({
     title: z.string().min(2, "Judul minimal 2 karakter").optional(),
+    description: z.string().optional(),
     type: z.enum(["RPP", "MATERI", "OBSERVASI", "REFLEKSI"]).optional(),
     deadline: z.string().datetime().optional(),
 });

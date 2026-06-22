@@ -7,7 +7,7 @@ const SECRET = new TextEncoder().encode(
     process.env.JWT_SECRET || "seribu-bulan-lms-jwt-secret-key-2024-change-in-production"
 );
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const {pathname} = request.nextUrl;
 
     // Skip public paths

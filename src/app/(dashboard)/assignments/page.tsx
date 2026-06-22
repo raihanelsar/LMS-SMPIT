@@ -5,8 +5,9 @@ import {useRouter} from "next/navigation";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
-import {ClipboardList, Calendar, Users, ExternalLink} from "lucide-react";
-import {programsApi} from "@/lib/api-client";
+import {ClipboardList, Calendar, Users, ExternalLink, Plus, Edit, Trash2} from "lucide-react";
+import {assignmentsApi, programsApi} from "@/lib/api-client";
+import {useAuth} from "@/lib/auth-context";
 import {LoadingPage} from "@/components/ui/loading";
 
 type Submission = {
@@ -35,12 +36,19 @@ type Assignment = {
 export default function AssignmentsPage() {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const router = useRouter();
+    const {user} = useAuth();
+
+    const canManage = user?.role === "SUPER_ADMIN" || user?.role === "FACILITATOR";
 
     useEffect(() => {
-        programsApi
-        .list()
-        .then((data) => {
+        loadAssignments();
+    }, []);
+
+    const loadAssignments = async () => {
+        try {
+            const data = await programsApi.list();
             const allAssignments =
                 data.programs?.flatMap(
                     (p: Program) =>
@@ -50,9 +58,27 @@ export default function AssignmentsPage() {
                         })) || []
                 ) || [];
             setAssignments(allAssignments as Assignment[]);
-        })
-        .finally(() => setLoading(false));
-    }, []);
+        } catch (error) {
+            console.error("Error loading assignments:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Apakah Anda yakin ingin menghapus tugas ini?")) return;
+
+        setDeletingId(id);
+        try {
+            await assignmentsApi.delete(id);
+            await loadAssignments();
+        } catch (error) {
+            console.error("Delete assignment error:", error);
+            alert(error instanceof Error ? error.message : "Gagal menghapus tugas");
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
     if (loading) {
         return <LoadingPage />;
@@ -75,9 +101,17 @@ export default function AssignmentsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-slate-900">Tugas</h1>
-                <p className="text-slate-500 mt-1">Lihat dan kelola semua tugas pembelajaran</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900">Tugas</h1>
+                    <p className="text-slate-500 mt-1">Lihat dan kelola semua tugas pembelajaran</p>
+                </div>
+                {canManage && (
+                    <Button onClick={() => router.push("/assignments/new")}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Tambah Tugas
+                    </Button>
+                )}
             </div>
 
             {assignments.length === 0 ? (
@@ -92,7 +126,7 @@ export default function AssignmentsPage() {
                     {assignments.map((assignment) => (
                         <Card key={assignment.id} className="hover:shadow-lg transition-shadow">
                             <CardHeader>
-                                <div className="flex items-start justify-between">
+                                <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1">
                                         <CardTitle className="text-xl text-slate-900 mb-1">
                                             {assignment.title}
@@ -113,12 +147,12 @@ export default function AssignmentsPage() {
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-6">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex gap-6 flex-wrap">
                                         <div className="flex items-center gap-2 text-sm text-slate-600">
                                             <Calendar className="h-4 w-4" />
                                             <span>
-                                                Deadline:{" "}
+                                                Deadline: {" "}
                                                 {new Date(assignment.deadline).toLocaleDateString("id-ID", {
                                                     day: "numeric",
                                                     month: "long",
@@ -131,14 +165,37 @@ export default function AssignmentsPage() {
                                             <span>{assignment.submissions?.length || 0} submission</span>
                                         </div>
                                     </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => router.push(`/assignments/${assignment.id}`)}
-                                    >
-                                        <ExternalLink className="h-4 w-4 mr-2" />
-                                        Detail
-                                    </Button>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => router.push(`/assignments/${assignment.id}`)}
+                                        >
+                                            <ExternalLink className="h-4 w-4 mr-2" />
+                                            Detail
+                                        </Button>
+                                        {canManage && (
+                                            <>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => router.push(`/assignments/${assignment.id}/edit`)}
+                                                >
+                                                    <Edit className="h-4 w-4 mr-2" />
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => handleDelete(assignment.id)}
+                                                    disabled={deletingId === assignment.id}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    {deletingId === assignment.id ? "Menghapus..." : "Hapus"}
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
